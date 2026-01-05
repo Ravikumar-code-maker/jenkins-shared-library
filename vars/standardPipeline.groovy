@@ -3,8 +3,10 @@ def call(Map config) {
         agent any
         stages {
           stage(Checkout) {
-            steps
-}
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Ravikumar-code-maker/jenkins-shared-library']])
+            }
+          }
             stage('Build') {
                 steps {
                     sh 'mvn clean package'
@@ -12,33 +14,26 @@ def call(Map config) {
             }
             stage('Deploy to Dev') {
                 steps {
-                    // Using config.keyname to access variables from Jenkinsfile
-                    deploy adapters: [tomcat9(credentialsId: config.devCreds, url: config.devUrl)], 
-                           contextPath: 'dev-app', 
-                           war: 'target/*.war'
+                    deployToTomcat(config.devUrl, config.devCreds, 'dev-context') 
+                           
                 }
             }
-            stage('Approval') {
+            stage('Manual Promotion') {
                 steps {
-                    input message: "Promote build to Production?"
+                    input message: "Promote build ${env.BUILD_NUMBER} to Production?"
                 }
             }
-            stage('Deploy to Prod & Nexus') {
+           stage('Deploy to Prod & Nexus') {
                 steps {
                     parallel(
                         "Production": {
-                            deploy adapters: [tomcat9(credentialsId: config.prodCreds, url: config.prodUrl)], 
-                                   contextPath: 'prod-app', 
-                                   war: 'target/*.war'
+                            deployToTomcat(config.prodUrl, config.prodCreds, 'prod-context')
                         },
                         "Nexus": {
                             nexusArtifactUploader(
-                                nexusVersion: 'nexus3',
-                                protocol: 'http',
-                                nexusUrl: config.nexusUrl.replace('http://', ''), // Strip protocol for plugin
-                                groupId: config.groupId,
-                                version: config.version,
-                                repository: 'maven-releases',
+                                nexusVersion: 'nexus3', protocol: 'http',
+                                nexusUrl: config.nexusUrl, groupId: config.groupId,
+                                version: config.version, repository: 'maven-releases',
                                 credentialsId: config.nexusCreds,
                                 artifacts: [[artifactId: config.artifactId, classifier: '', file: "target/${config.artifactId}.war", type: 'war']]
                             )
@@ -49,4 +44,6 @@ def call(Map config) {
         }
     }
 }
-
+def deployToTomcat(url, creds, path) {
+    deploy adapters: [tomcat9(credentialsId: creds, url: url)], contextPath: path, war: 'target/*.war'
+}
