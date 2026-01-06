@@ -45,7 +45,7 @@ def call(Map config) {
 
 def deployToTomcat(url, creds, path) {
         // We use withCredentials to securely get the username and password
-    withCredentilas([usernamePassword(credentialsId: creds, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+    withCredentials([usernamePassword(credentialsId: creds, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
         echo "Deploying to ${url}..."
         sh """
             curl -v -u "${USER}:${PASS}"\
