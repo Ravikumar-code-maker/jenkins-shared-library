@@ -30,7 +30,7 @@ def call(Map config) {
                                 nexusUrl: config.nexusUrl, groupId: config.groupId,
                                 version: config.version, repository: 'maven-releases',
                                 credentialsId: config.nexusCreds,
-                                artifacts: [[artifactId: config.artifactId, classifier: '', file: "target/${config.artifactId}.war", type: 'war']]
+                                artifacts: [[artifactId: config.artifactId, classifier: '', file: "target/web-app.war", type: 'war']]
                             )
                         }
                     )
