@@ -43,17 +43,14 @@ def call(Map config) {
 //    deploy adapters: [tomcat9(credentialsId: creds, url: url)], contextPath: path, war: 'target/*.war'
 //}
 
-def deployToTomcat(url, creds, path) {
-        // We use withCredentials to securely get the username and password
+def deployViaCurl(url, creds, path) {
     withCredentials([usernamePassword(credentialsId: creds, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-        echo "Deploying to ${url}..."
-        sh """
-            curl -v -u "${USER}:${PASS}"\
-                 -T "target/web-app.war"\
-                 "${url}/manager/text/deploy?path=/${path}&update=true"
-           """
+        echo "Deploying to ${url} via Manager API..."
+        // Use single quotes around the command to safely pass $USER and $PASS
+        sh 'curl -v -u "$USER:$PASS" -T target/web-app.war "' + url + '/manager/text/deploy?path=/' + path + '&update=true"'
     }
 }
+
 
 //In 2026, this script-based approach is the Organization-Level Standard because it is more reliable than Jenkins plugins. Here is the line-by-line explanation of how it works:
 //1. def deployToTomcat(url, creds, path)
