@@ -1,6 +1,17 @@
 def call(Map config) {
     pipeline {
         agent any
+        triggers {
+            githubPush() // This enables the webhook trigger for any app using this lib
+            // This block schedules the job automatically
+        //triggers {
+            // Option 1: Poll SCM every 2 minutes (checks for code changes)
+          //  pollSCM('H/2 * * * *')
+            
+            // Option 2: Periodic Build (runs even if no code changes)
+            // Example: Every day at 3:00 AM
+            // cron('0 3 * * *')
+        }
         stages {
             stage('Build') {
                 steps {
